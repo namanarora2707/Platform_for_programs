@@ -9,18 +9,7 @@ import {
   defaultProfile,
   normalizeProfile,
 } from "../utils/store.js";
-
-const SESSION_COOKIE = "sid";
-
-function setSessionCookie(_req, res, sid) {
-  res.cookie(SESSION_COOKIE, sid, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true,
-    path: "/",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  });
-}
+import jwt from "jsonwebtoken";
 
 function createSessionRecord(userId) {
   const sessions = readSessions();
@@ -65,10 +54,9 @@ export const signup = (req, res) => {
   users.push(user);
   writeUsers(users);
 
-  const sid = createSessionRecord(user.id);
-  setSessionCookie(req, res, sid);
+  const token = jwt.sign({ id: user.id, email: user.email }, process.env.SECRET_KEY, { expiresIn: "1h" });
 
-  return res.status(201).json(serializeUser(user));
+  return res.status(201).json({ user: serializeUser(user), token });
 };
 
 export const login = (req, res) => {
@@ -84,10 +72,9 @@ export const login = (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const sid = createSessionRecord(user.id);
-  setSessionCookie(req, res, sid);
+  const token = jwt.sign({ id: user.id, email: user.email }, process.env.SECRET_KEY, { expiresIn: "1h" });
 
-  return res.json(serializeUser(user));
+  return res.json({ user: serializeUser(user), token });
 };
 
 export const me = (req, res) => {
