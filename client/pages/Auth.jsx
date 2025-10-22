@@ -23,13 +23,13 @@ export default function AuthPage() {
         try {
             let me;
             if (mode === "signup") {
-                me = await api("/api/auth/signup", {
+                me = await api(`${import.meta.env.VITE_BASE_URL}/signup`, {
                     method: "POST",
                     body: JSON.stringify({ email, password, name }),
                 });
             }
             else {
-                me = await api("/api/auth/login", {
+                me = await api(`${import.meta.env.VITE_BASE_URL}/login`, {
                     method: "POST",
                     body: JSON.stringify({ email, password }),
                 });

@@ -14,6 +14,13 @@ export default defineConfig(() => ({
       allow: [path.resolve(__dirname, ".."), path.resolve(__dirname, ".")],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
+    proxy: {
+      "/api": {
+        target: "https://platform-for-programs.onrender.com",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     outDir: "dist",
