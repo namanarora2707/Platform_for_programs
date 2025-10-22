@@ -1,13 +1,27 @@
 export async function api(url, options = {}) {
+    // If url is a relative path (starts with '/'), prefix with VITE_BASE_URL if available
+    const base = typeof import.meta !== "undefined" ? (import.meta.env?.VITE_BASE_URL || "") : "";
+    if (typeof url === "string" && url.startsWith("/")) {
+        url = `${base}${url}`;
+    }
+
     const hasBody = options.body !== undefined && options.body !== null;
     const headers = {
         ...(hasBody ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {}),
     };
+    // Attach JWT token from localStorage if available and not overridden
+    try {
+        const token = localStorage.getItem("auth_token");
+        if (token && !headers.Authorization && !headers.authorization) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+    }
+    catch { }
     let res;
     try {
         res = await fetch(url, {
-            credentials: "include",
+            credentials: options.credentials ?? "include",
             ...options,
             headers,
         });

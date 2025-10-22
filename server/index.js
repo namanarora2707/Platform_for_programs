@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { signup, login, me, logout } from "./routes/auth.js";
+import { signup, login, me } from "./routes/auth.js";
 import { execute } from "./routes/execute.js";
 import { listNotebooks, createNotebook, getNotebook, updateNotebook } from "./routes/notebooks.js";
 
@@ -25,7 +25,7 @@ export function createServer() {
   app.post("/api/auth/signup", signup);
   app.post("/api/auth/login", login);
   app.get("/api/auth/me", me);
-  app.post("/api/auth/logout", logout);
+
 
   // Code execution
   app.post("/api/run", execute);

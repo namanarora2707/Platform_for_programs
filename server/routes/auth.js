@@ -1,24 +1,12 @@
 import {
   readUsers,
   writeUsers,
-  readSessions,
-  writeSessions,
   hashPassword,
   verifyPassword,
   newId,
   defaultProfile,
-  normalizeProfile,
 } from "../utils/store.js";
 import jwt from "jsonwebtoken";
-
-function createSessionRecord(userId) {
-  const sessions = readSessions();
-  const sid = newId("sid");
-  const now = Date.now();
-  sessions.push({ sid, userId, createdAt: now, lastSeenAt: now });
-  writeSessions(sessions);
-  return sid;
-}
 
 function serializeUser(user) {
   return {
@@ -78,40 +66,21 @@ export const login = (req, res) => {
 };
 
 export const me = (req, res) => {
-  const sid = req.cookies?.[SESSION_COOKIE];
-  if (!sid) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
-  const sessions = readSessions();
-  const session = sessions.find((item) => item.sid === sid);
-  if (!session) {
-    return res.status(401).json({ error: "Invalid session" });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const users = readUsers();
+    const user = users.find((u) => u.id === decoded.id);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+    return res.json(serializeUser(user));
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid token" });
   }
-
-  const users = readUsers();
-  const user = users.find((item) => item.id === session.userId);
-  if (!user) {
-    return res.status(401).json({ error: "Invalid session" });
-  }
-
-  if (normalizeProfile(user)) {
-    writeUsers(users);
-  }
-  session.lastSeenAt = Date.now();
-  writeSessions(sessions);
-
-  return res.json(serializeUser(user));
-};
-
-export const logout = (req, res) => {
-  const sid = req.cookies?.[SESSION_COOKIE];
-  if (sid) {
-    const sessions = readSessions();
-    const nextSessions = sessions.filter((item) => item.sid !== sid);
-    writeSessions(nextSessions);
-  }
-
-  res.clearCookie(SESSION_COOKIE, { path: "/", sameSite: "none", secure: true });
-  return res.json({ ok: true });
 };

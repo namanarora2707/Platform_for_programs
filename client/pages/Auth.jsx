@@ -22,18 +22,21 @@ export default function AuthPage() {
         setError("");
         try {
             let me;
-            if (mode === "signup") {
-                me = await api(`${import.meta.env.VITE_BASE_URL}/api/v1/user/signup`, {
-                    method: "POST",
-                    body: JSON.stringify({ email, password, name }),
-                });
-            } else {
-                me = await api(`${import.meta.env.VITE_BASE_URL}/api/v1/user/login`, {
-                    method: "POST",
-                    body: JSON.stringify({ email, password }),
-                });
-            }
-            await refresh();
+      if (mode === "signup") {
+        const res = await api(`${import.meta.env.VITE_BASE_URL}/api/auth/signup`, {
+          method: "POST",
+          body: JSON.stringify({ email, password, name }),
+        });
+        // server returns { user, token }
+        if (res?.token) localStorage.setItem("auth_token", res.token);
+      } else {
+        const res = await api(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+        if (res?.token) localStorage.setItem("auth_token", res.token);
+      }
+      await refresh();
             navigate("/");
         }
         catch (err) {

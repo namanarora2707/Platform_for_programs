@@ -20,7 +20,8 @@ export function useAuth() {
         refresh();
     }, [refresh]);
     const logout = useCallback(async () => {
-        await api("/api/auth/logout", { method: "POST" });
+        // Clear stored token and local user state
+        try { localStorage.removeItem("auth_token"); } catch { }
         setUser(null);
     }, []);
     return { user, loading, refresh, logout, setUser };
