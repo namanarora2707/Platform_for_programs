@@ -27,8 +27,7 @@ export default function AuthPage() {
                     method: "POST",
                     body: JSON.stringify({ email, password, name }),
                 });
-            }
-            else {
+            } else {
                 me = await api(`${import.meta.env.VITE_BASE_URL}/api/v1/user/login`, {
                     method: "POST",
                     body: JSON.stringify({ email, password }),
