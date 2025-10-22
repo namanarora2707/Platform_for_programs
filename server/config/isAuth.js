@@ -2,19 +2,23 @@ const jwt = require("jsonwebtoken");
 
 exports.verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
-    if (!token) {
+    const authHeader = req.headers && (req.headers.authorization || req.headers.Authorization);
+    if (!authHeader || typeof authHeader !== "string") {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const decoded = await jwt.verify(token, process.env.SECRET_KEY);
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const token = parts[1];
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
     if (!decoded) {
-      throw new Error();
+      return res.status(401).json({ error: "Unauthorized" });
     }
     req.user = decoded;
-
-    next();
+    return next();
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Error Validating Token" });
+    console.log("verifyToken error:", error && error.message ? error.message : error);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
